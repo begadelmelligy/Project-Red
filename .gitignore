@@ -1,1 +1,45 @@
-req.txt
+# Compiled binary files
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.obj
+*.a
+*.lib
+*.out
+
+# Compiler-generated files
+*.pdb
+*.ilk
+*.idb
+*.exp
+*.manifest
+
+# Build and temporary files
+/build/
+/bin/
+/lib/
+*.log
+*.tmp
+*.cache
+*.swp
+*.swo
+
+# Debugging files
+*.stackdump
+vgcore.*
+
+# IDE and editor-specific files
+.vscode/
+.idea/
+*.code-workspace
+*.sln
+*.vcxproj*
+*.xcodeproj
+*.DS_Store
+
+# Ignore personal notes or backup files
+*.bak
+*.orig
+*.old
