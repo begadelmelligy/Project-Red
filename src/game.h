@@ -154,6 +154,7 @@ typedef struct
     City cities[MAX_CITIES];
     uint32_t city_count;
 } World;
+
 typedef enum
 {
     VIEW_WORLD_MAP,
@@ -161,7 +162,7 @@ typedef enum
     VIEW_BUILDING_MODE,
 } GameView;
 
-typedef struct GameState
+typedef struct
 {
     Player player;
 

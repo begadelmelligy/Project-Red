@@ -17,6 +17,8 @@
 *.manifest
 
 # Build and temporary files
+MakeFile
+compile_flags.txt
 /build/
 /bin/
 /lib/
