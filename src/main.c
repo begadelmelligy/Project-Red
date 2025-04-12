@@ -3,10 +3,6 @@
 int main(void)
 {
     // we need assets hello!!...
-    //  Initialize Raylib window
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Project Red");
-    SetTargetFPS(60);
-
     Game *game = (Game *)calloc(1, sizeof(Game)); // like malloc but init with 0
     if (!game)
     {
