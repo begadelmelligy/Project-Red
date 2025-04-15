@@ -2,7 +2,7 @@
 
 int main(void)
 {
-    // we need assets hello!!...
+
     Game *game = (Game *)calloc(1, sizeof(Game)); // like malloc but init with 0
     if (!game)
     {

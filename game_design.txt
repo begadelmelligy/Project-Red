@@ -1,0 +1,16 @@
+3D Isometric Restaurant city builder on mars 
+
+main mechanics:
+
+ - Building placements 
+ - hiring staff 
+ - assigning staff to buildings
+ - collect money and expand the empire
+
+extra mechanics(later):
+
+ -day/night cycles 
+ -at night evil aliens attack our restaurants and eat our staff
+ -body gaurd hiring to protect us
+ -skill trees meta progress
+ -random npc walking around n entering the buildings

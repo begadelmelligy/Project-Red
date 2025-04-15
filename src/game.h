@@ -11,15 +11,19 @@
 
 /* ========== GAME CONSTANTS ========== */
 
-#define MAX_STAFF_PER_BUILDING 10
+#define MAX_STAFF_PER_BUILDING 15
 #define MAX_BUILDINGS_PER_CITY 20
-#define MAX_PLOTS_PER_CITY 4
 #define MAX_CITIES 4
+#define MAX_STAFF_OWNED 1000
+
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
-#define MAX_CUSTOMERS (MAX_CITIES * 100)
+
 #define ARENA_SIZE (10 * 1024 * 1024) // 10 MB
-#define GRID_CELL_SIZE 64
+
+#define CAMERA_DISTANCE 50.0f                 // only for clipping
+#define CAMERA_ANGLE 35.264f * DEG2RAD        // 35.264° = arctan(1/sqrt(2))
+#define CAMERA_ROTATION_ANGLE 45.0f * DEG2RAD // 45° rotation around vertical axis
 
 /* ========== GAME ENUMS ========== */
 
@@ -31,6 +35,15 @@ typedef enum
     MAP_SIZE_LARGE = 256
 
 } CitySizes;
+
+typedef enum
+{
+    CITY_0 = 0,
+    CITY_1 = 10000,
+    CITY_2 = 100000,
+    CITY_3 = 1000000
+
+} CityPrices;
 
 typedef enum
 {
@@ -71,54 +84,39 @@ typedef enum
     CUSTOMER_STATE_IDLE,
     CUSTOMER_STATE_MOVING,
     CUSTOMER_STATE_EATING,
-    CUSTOMER_STATE_LEAVING
 
 } CustomerState;
 
 typedef enum
 {
-    SKILL_RARITY_CHANCE_1,     // +20% more chance for staff rolling
-    SKILL_REDUCED_ROLL_COST_1, // -20% Less rolling cost
-    SKILL_FASTER_COOKING_1,    // +20% faster cooking
-    SKILL_GUARDS_ATTACK_1,     // +20% Guard attack
-    SKILL_BUILDINGS_HEALTH_1,  // +20% Building health
-    SKILL_COUNT
-} SkillId;
+    MAIN_MENU_SCENE,
+    PLANET_SCENE,
+    CITY_SCENE,
+    GAME_OVER_SCENE,
+    VICTORY_SCENE
 
-typedef struct
-{
-    SkillId id;
-    char name[64];
-    char description[256];
-    int cost;
-    bool is_unlocked;
-
-} Skill;
+} GameScenes;
 
 typedef enum
 {
-    INTRO_VIEW,
-    MAIN_MENU_VIEW,
-    PLANET_VIEW,
-    CITY_VIEW,
-    SETTING_GAME_VIEW,
-    SETTING_MAIN_MENU_VIEW,
-    GAME_OVER_VIEW,
-    VICTORY_VIEW
-
-} GameView;
-
-typedef enum
-{
-    GRID_CELL_EMPTY,       // Available for building
-    GRID_CELL_BLOCKED,     // Permanently blocked
-    GRID_CELL_BUILDING,    // Contains a building
-    GRID_CELL_LOCKED_PLOT, // Part of a locked plot
-    GRID_CELL_NOT_USED     // Extra grid not used for smaller maps
+    GRID_CELL_EMPTY,    // Available for building
+    GRID_CELL_BLOCKED,  // Permanently blocked
+    GRID_CELL_BUILDING, // Contains a building
+    GRID_CELL_NOT_USED  // Extra grid not used for smaller maps
 
 } GridCellType;
 
 /* ========== GAME DATA ========== */
+
+typedef struct
+{
+    BuildingType type;
+    uint8_t staff_capacity;
+    uint32_t base_cost;
+    uint32_t maintenance_cost;
+    Model model;
+
+} BuildingTemplate;
 
 typedef struct
 {
@@ -135,24 +133,10 @@ typedef struct
 
 typedef struct
 {
-    BuildingType type;
-    char name[64];
-    uint8_t staff_capacity;
-    uint32_t base_cost;
-    uint32_t maintenance_cost;
-    Vector2 size;
-    Texture2D texture;
-
-} BuildingTemplate;
-
-typedef struct
-{
     BuildingTemplate template;
     uint32_t id;
-    uint32_t city_id;
-    uint32_t plot_id;
-    BuildingType type;
-    Vector2 position;
+    Vector3 position;
+    float rotation_angle;
     bool is_operational;
     Staff *assigned_staff[MAX_STAFF_PER_BUILDING];
     uint32_t current_staff_count;
@@ -161,110 +145,32 @@ typedef struct
 
 typedef struct
 {
-    uint32_t id;
-    uint32_t city_id;
-    bool is_unlocked;
-    uint32_t purchase_cost;
-    uint32_t grid_row_start;
-    uint32_t grid_col_start;
-    uint32_t grid_row_end;
-    uint32_t grid_col_end;
-} LandPlot;
-
-typedef struct
-{
-    GridCellType type;
-    int32_t building_id;
-    uint32_t plot_id;
-} GridCell;
-
-typedef struct
-{
     CityId name_id;
     bool is_unlocked;
-    uint64_t unlock_networth_requirement;
-    uint32_t building_count;
-    uint32_t plots_unlocked;
-    uint64_t population;
-    Texture2D city_map;
-    uint32_t grid_width;
-    uint32_t grid_height;
+    uint64_t price_to_unlock;
+    uint32_t current_building_count;
+    Model city_model;
 
-    GridCell **grid; // double pointer for 2d grid[y][x]... pointer to colums and pointer to the pointer of colums for rows to allow us to have dynamic grid sizes for the maps could be just grid[100] or grid[MAX_GRID] but why we are cool xdd this is the common way to have a dynamic 2d array
-    LandPlot plots[MAX_PLOTS_PER_CITY];
     Building buildings[MAX_BUILDINGS_PER_CITY];
 } City;
 
 typedef struct
 {
-    City cities[MAX_CITIES];
-    uint32_t city_count;
-    Model model; // 3D planet model (GLB)
+    Model model;
 
-} World;
+} Planet;
 
 typedef struct
 {
     uint64_t net_worth;
-    uint16_t num_owned_plots;
-    uint16_t level;
-    uint64_t current_exp;
-    uint64_t exp_to_next_level;
-
-    Skill skills[SKILL_COUNT];
-    int skill_points_available;
-    int skill_points_spent;
-
 } Player;
-
-typedef struct
-{
-    Texture2D small_restaurant_texture;
-    Texture2D medium_restaurant_texture;
-    Texture2D large_restaurant_texture;
-
-    Texture2D customer_idel_texture;
-    Texture2D customer_walking_texture;
-    Texture2D customer_eating_texture;
-
-    Texture2D cities_texture[MAX_CITIES];
-
-    Texture2D intro_texture;
-
-} Assets;
-
-typedef struct
-{
-    uint32_t id;
-    Texture2D sprite_sheet;
-    Rectangle *frames; // allocate dynamically (arena) - pointer to allow different frames/animation
-    uint32_t frame_count;
-    float frame_duration;
-    uint32_t current_frame;
-    float timer;
-    bool is_looping;
-
-} Animation;
-
-typedef struct
-{
-    uint32_t id;
-    Vector2 position;
-    Vector2 target_position;
-    float speed;
-    CustomerState state;
-    int32_t target_building_id;
-    float satisfaction;
-    Animation *animation; // allocate dynamically (arena) - pointer to be able to point to any animation"idle,walking,eating...etc"
-
-} Customer;
 
 typedef struct
 {
     char *base;
     char *current;
-    size_t size;
-    size_t used;
+    uint64_t size;
+    uint64_t used;
 
 } MemoryArena;
 
@@ -278,18 +184,6 @@ typedef struct
     float button_height;
 
 } BuildingMenu;
-
-typedef struct
-{
-    Rectangle panel_rect;
-    Rectangle list_view_rect;
-    Rectangle scroll_bar_rect;
-    float scroll_offset_y;
-    Rectangle hire_button_rect;
-    Rectangle assign_button_rect;
-    Rectangle fire_button_rect;
-
-} StaffMenu;
 
 typedef struct
 {
@@ -314,12 +208,25 @@ typedef struct
 
 typedef struct
 {
-    BuildingMenu building_menu;
-    StaffMenu staff_menu;
-    SettingsMenu settings_menu;
-    HUDUi hud_data;
+    BuildingMenu building_ui;
+    SettingsMenu settings_ui;
+    HUDUi hud_ui;
 
 } UIData;
+
+typedef struct
+{
+    Model small_restaurant_model;
+    Model medium_restaurant_model;
+    Model large_restaurant_model;
+
+    Model cities_model[MAX_CITIES];
+
+    Model planet;
+
+    Texture2D intro_texture;
+
+} Assets;
 
 typedef struct
 {
@@ -327,12 +234,13 @@ typedef struct
 
     UIData ui_data;
 
-    World world;
+    Planet planet;
 
     BuildingTemplate building_templates[TEMPLATE_COUNT];
 
-    Staff staff_pool[MAX_STAFF_PER_BUILDING * MAX_BUILDINGS_PER_CITY * MAX_CITIES]; // sus dynamic it later
-    uint32_t current_staff_count;
+    City cities[MAX_CITIES];
+
+    Staff staff_owned[MAX_STAFF_OWNED];
 
     Assets assets;
 
@@ -342,30 +250,19 @@ typedef struct
 
 typedef struct
 {
-    bool show_main_menu;
-    bool show_build_menu;
-    bool show_staff_menu;
-    bool show_settings_menu;
-    bool building_menu_visible;
-    int selected_building_type; // -1 if none selected
-} UIState;
+    GameScenes current_scene;
 
-typedef struct
-{
-    GameView current_view;
-
-    int32_t current_city;
-    int32_t selected_plot;
+    CityId current_city;
     int32_t selected_building_id;
     int32_t selected_staff_id;
+    BuildingType selected_building_type_to_place;
+    Vector3 building_placement_position;
+    float building_placement_rotation_angle;
 
+    bool is_building_placement_mode;
     bool is_paused;
     bool is_game_over;
     bool is_victory;
-
-    float time_scale;
-
-    UIState ui_state;
 
 } GameState;
 
@@ -375,7 +272,7 @@ typedef struct
 {
     GameData data;
     GameState state;
-    Camera2D camera;
+    Camera3D camera;
     MemoryArena arena;
 
 } Game;
@@ -387,9 +284,13 @@ void update_game(Game *game, float dt);
 void draw_game(Game *game);
 void clean_up(Game *game);
 
-void init_city(Game *game, CityId id, uint32_t width, uint32_t height);
-
-void *arena_alloc(MemoryArena *arena, size_t size);
-void arena_free(MemoryArena *arena);
+void place_building(City *city, BuildingType type, Vector3 position, BuildingTemplate template, float rotation_angle);
+void hire_staff();
+void sell_staff();
+void assign_staff();
+void collect_money();
+Vector3 get_grid_position_from_mouse(Game *game);
+bool unlock_city(Game *game, int city_index);
+const char *get_city_name(CityId id);
 
 #endif // GAME_H
