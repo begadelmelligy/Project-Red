@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "raylib.h"
+#include <math.h>
 
 const int SWIDTH = 1400;
 const int SHEIGHT = 1000;
@@ -18,6 +19,13 @@ typedef struct {
     const char *name;
 } City;
 
+typedef struct {
+    float r;
+    int rings;
+    int slices;
+
+} World;
+
 Camera initCamera(){
     Camera camera = { 0 };
     camera.position = (Vector3){ 0.0f, 16.0f, 16.0f };
@@ -29,20 +37,16 @@ Camera initCamera(){
     return camera;
 } 
 
-typedef struct {
-    float r;
-    int rings;
-    int slices;
-
-} World;
 
 int main(void)
 {
     World world = {
-        world.r = 1.0f,
+        world.r = 10.0f,
         world.rings = 32,
         world.slices = 32,
     };
+
+    City worldCities[NUM_CITIES];
 
 
     InitWindow(SWIDTH, SHEIGHT, "World Map Test");
@@ -52,44 +56,30 @@ int main(void)
     Camera camera;
     camera = initCamera();
 
-    float offset = 16;
+    float offset = 48;
     float azimuthA = 45.0f;
     float zenithA = 20.0f;
 
     Mesh sphereMesh = GenMeshSphere(world.r, world.slices, world.rings);
     Model sphereModel = LoadModelFromMesh(sphereMesh);
 
-    sphereMesh.colors = (unsigned char *)malloc(sphereMesh.vertexCount * 4); // 4 bytes per vertex
+    const char* objPath = "E:\\Projects\\Project-Red\\assets\\Home.obj";
+    const char* textPath = "E:\\Projects\\Project-Red\\assets\\FastFood_Restaurant_Color.png";
+    Model building = LoadModel(objPath);
+    Texture2D buildingT = LoadTexture(textPath);
+    building.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = buildingT;
 
-    for (int i = 0; i < sphereMesh.vertexCount; i++) {
-        // Assign colors based on some rule — for example, thirds
-        if (i < sphereMesh.vertexCount / 3) {
-            sphereMesh.colors[i*4 + 0] = 255;  // R
-            sphereMesh.colors[i*4 + 1] = 0;    // G
-            sphereMesh.colors[i*4 + 2] = 0;    // B
-            sphereMesh.colors[i*4 + 3] = 255;  // A
-        } else if (i < 2 * sphereMesh.vertexCount / 3) {
-            sphereMesh.colors[i*4 + 0] = 0;
-            sphereMesh.colors[i*4 + 1] = 255;
-            sphereMesh.colors[i*4 + 2] = 0;
-            sphereMesh.colors[i*4 + 3] = 255;
-        } else {
-            sphereMesh.colors[i*4 + 0] = 0;
-            sphereMesh.colors[i*4 + 1] = 0;
-            sphereMesh.colors[i*4 + 2] = 255;
-            sphereMesh.colors[i*4 + 3] = 255;
-        }
-    }
-
-    UploadMesh(&sphereMesh, false); // false = don't keep CPU copy
-
-    Model model = LoadModelFromMesh(sphereMesh);
-    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = WHITE;
-    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture.id = 0;
+    float zoom = 1.0f;
 
     while (!WindowShouldClose())
     {
         BeginDrawing();
+
+        float zoomSpeed = 1.0f;
+        float wheel = GetMouseWheelMove();
+        camera.position = Vector3Add(camera.position,
+        Vector3Scale(Vector3Normalize(Vector3Subtract(camera.target, camera.position)), wheel * zoomSpeed));
+        offset = sqrt(pow(camera.position.x, 2) + pow(camera.position.y, 2) + pow(camera.position.z, 2));
 
         if (IsKeyDown(KEY_L)) azimuthA += PI/32;
         if (IsKeyDown(KEY_H)) azimuthA -= PI/32;
@@ -112,10 +102,13 @@ int main(void)
 
         BeginMode3D(camera);
 
-        DrawModel(sphereModel, (Vector3){ 0.0f, 0.0f, 0.0f }, 1.0f, WHITE);
+        DrawModel(building, (Vector3){ 0.0f, 10.0f, 0.0f }, 0.01f, WHITE);
         
+        DrawGrid(10, 1.0f);
 
-        /*debug*/
+        DrawModel(sphereModel, (Vector3){ 0.0f, 0.0f, 0.0f }, 1.0f, RED);
+        /**/
+        /*/*debug*/
         /*DrawModelWires(sphereModel, (Vector3){ 0.0f, 0.0f, 0.0f }, 1.0f, GRAY);*/
         /*DrawBoundingBox(GetMeshBoundingBox(sphereMesh), YELLOW);*/
 
