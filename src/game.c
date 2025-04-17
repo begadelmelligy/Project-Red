@@ -20,6 +20,7 @@ void init_game(Game *game)
         CAMERA_DISTANCE * sinf(CAMERA_ANGLE),                               // Y = r * sin(elevation)
         CAMERA_DISTANCE * cosf(CAMERA_ANGLE) * cosf(CAMERA_ROTATION_ANGLE)  // Z = r * cos(elevation) * cos(azimuth)
     };
+
     game->camera.target = (Vector3){0, 0, 0}; // Look at the origin
     game->camera.up = (Vector3){0, 1, 0};     // Standard up direction
     game->camera.projection = CAMERA_ORTHOGRAPHIC;
@@ -581,8 +582,6 @@ void clean_up(Game *game)
     UnloadModel(game->data.assets.planet);
 
     UnloadTexture(game->data.assets.intro_texture);
-
-    free(game->arena.base);
 
     CloseWindow();
 }

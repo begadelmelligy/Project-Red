@@ -2,7 +2,7 @@
 
 main mechanics:
 
- - Building placements 
+ - Building placements *
  - hiring staff 
  - assigning staff to buildings
  - collect money and expand the empire
