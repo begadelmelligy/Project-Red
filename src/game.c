@@ -1,4 +1,5 @@
 #include "game.h"
+#include "raymath.h"
 
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
@@ -37,7 +38,7 @@ void init_game(Game *game)
 
     game->data.assets.large_restaurant_model = LoadModel("assets/large_rest.vox");
     game->data.assets.medium_restaurant_model = LoadModel("assets/meduim_rest.vox");
-    game->data.assets.small_restaurant_model = LoadModel("assets/small_rest.vox");
+    game->data.assets.small_restaurant_model = LoadModel("assets/small_rest.obj");
 
     game->data.assets.planet = LoadModel("assets/planet.vox");
     /* ======================================== */
@@ -461,7 +462,7 @@ void draw_game(Game *game)
             Building *building = &city->buildings[j];
             if (building->id >= 0)
             {
-                DrawModelEx(building->template.model, building->position,
+                DrawModelEx(building->template.model, Vector3Add(building->position, (Vector3){0, 0, 0}),
                             (Vector3){0, 1, 0}, building->rotation_angle,
                             (Vector3){0.2f, 0.2f, 0.2f}, WHITE);
             }
@@ -471,7 +472,7 @@ void draw_game(Game *game)
         {
             Model previewModel = game->data.building_templates[game->state.selected_building_type_to_place].model;
             Color previewColor = {255, 255, 255, 128};
-            DrawModelEx(previewModel, game->state.building_placement_position,
+            DrawModelEx(previewModel, Vector3Add(game->state.building_placement_position, (Vector3){0, 0, 0}),
                         (Vector3){0, 1, 0}, game->state.building_placement_rotation_angle,
                         (Vector3){0.2f, 0.2f, 0.2f}, previewColor);
         }

@@ -77,14 +77,16 @@ int main(void)
 
         float zoomSpeed = 1.0f;
         float wheel = GetMouseWheelMove();
+        float rotation = 64;
+        
         camera.position = Vector3Add(camera.position,
         Vector3Scale(Vector3Normalize(Vector3Subtract(camera.target, camera.position)), wheel * zoomSpeed));
         offset = sqrt(pow(camera.position.x, 2) + pow(camera.position.y, 2) + pow(camera.position.z, 2));
 
-        if (IsKeyDown(KEY_L)) azimuthA += PI/32;
-        if (IsKeyDown(KEY_H)) azimuthA -= PI/32;
-        if (IsKeyDown(KEY_K)) zenithA += PI/32;
-        if (IsKeyDown(KEY_J)) zenithA -= PI/32;
+        if (IsKeyDown(KEY_L)) azimuthA += PI/rotation;
+        if (IsKeyDown(KEY_H)) azimuthA -= PI/rotation;
+        if (IsKeyDown(KEY_K)) zenithA += PI/rotation;
+        if (IsKeyDown(KEY_J)) zenithA -= PI/rotation;
 
         if (zenithA > PI/2 - PI/16){
             zenithA = PI/2 - PI/16;
